@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>💘 ¿Mi San Valentín?</title>
+  <style>
+    :root { --bg1:#ffdde1; --bg2:#ee9ca7; --card:#ffffffcc; }
+    * { box-sizing: border-box; }
+    body{
+      margin:0; min-height:100vh; display:grid; place-items:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(circle at top, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
+    .card{
+      width:min(520px, 92vw);
+      background: var(--card);
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
+      padding: 26px 22px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.18);
+      text-align:center;
+      position: relative;
+    }
+    h1{ margin: 0 0 6px; font-size: 28px; }
+    p{ margin: 6px 0 14px; font-size: 16px; line-height:1.35; }
+    .heart{
+      font-size: 64px;
+      animation: beat 1.1s infinite;
+      margin: 10px 0 4px;
+    }
+    @keyframes beat { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+
+    .btns{
+      margin-top: 14px;
+      display:flex;
+      gap: 12px;
+      justify-content:center;
+      flex-wrap:wrap;
+      position: relative;
+      padding-bottom: 64px; /* espacio para el botón que se mueve */
+      min-height: 120px;
+    }
+    button{
+      border:0;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 10px 18px rgba(0,0,0,.12);
+      transition: transform .12s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: scale(.98); }
+    #yes{
+      background: #ff3b7a;
+      color: white;
+    }
+    #no{
+      background: #222;
+      color: white;
+      position: absolute; /* para poder moverlo */
+    }
+
+    .result{
+      display:none;
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #ffffffd8;
+      border: 1px solid rgba(0,0,0,.08);
+    }
+    .small{
+      opacity:.8; font-size: 13px; margin-top: 8px;
+    }
+
+    /* corazones flotando */
+    .float{
+      position: absolute;
+      left: 50%;
+      bottom: -20px;
+      font-size: 18px;
+      opacity: .85;
+      animation: rise 3.4s linear forwards;
+      pointer-events:none;
+    }
+    @keyframes rise{
+      from{ transform: translate(-50%,0) scale(1); opacity:.9; }
+      to{ transform: translate(calc(-50% + var(--x)), -120vh) scale(1.4); opacity:0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="heart">💘</div>
+    <h1>¿Quieres ser mi San Valentín?</h1>
+    <p>Prometo risas, detallitos y hacer de tu día algo bonito. ✨</p>
+
+    <div class="btns" id="area">
+      <button id="yes">Acepto 💖</button>
+      <button id="no">No 😅</button>
+    </div>
+
+    <div class="result" id="result">
+      <h2 style="margin:0 0 6px;">¡Siiiii! 🥰</h2>
+      <p style="margin:0;">Ya sabía 😌💞 Te amo.</p>
+      <p class="small" id="time"></p>
+    </div>
+
+    <p class="small">Tip: si intentas presionar “No”… buena suerte 😇</p>
+  </div>
+
+  <script>
+    const noBtn = document.getElementById('no');
+    const yesBtn = document.getElementById('yes');
+    const area = document.getElementById('area');
+    const result = document.getElementById('result');
+    const timeEl = document.getElementById('time');
+
+    // Coloca el botón "No" en un lugar inicial bonito
+    function placeNoInitial(){
+      const r = area.getBoundingClientRect();
+      // cerca del centro a la derecha
+      const x = r.width * 0.62;
+      const y = 18;
+      noBtn.style.left = x + 'px';
+      noBtn.style.top  = y + 'px';
+    }
+
+    // Mueve el botón "No" a un lugar aleatorio dentro del área
+    function moveNo(){
+      const r = area.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+
+      const pad = 8;
+      const maxX = r.width - b.width - pad;
+      const maxY = r.height - b.height - pad;
+
+      const x = Math.max(pad, Math.random() * maxX);
+      const y = Math.max(pad, Math.random() * maxY);
+
+      noBtn.style.left = x + 'px';
+      noBtn.style.top  = y + 'px';
+
+      popHearts(6);
+      navigator.vibrate?.(30);
+    }
+
+    // Corazones flotando
+    function popHearts(n=4){
+      for(let i=0;i<n;i++){
+        const s = document.createElement('div');
+        s.className = 'float';
+        s.textContent = Math.random() > .5 ? '💗' : '💖';
+        s.style.setProperty('--x', (Math.random()*240 - 120) + 'px');
+        s.style.left = (Math.random()*100) + 'vw';
+        s.style.animationDuration = (2.6 + Math.random()*1.8) + 's';
+        document.body.appendChild(s);
+        setTimeout(()=>s.remove(), 4200);
+      }
+    }
+
+    // Eventos para que el "No" se escape (mouse y touch)
+    ['mouseenter','mousedown','touchstart','pointerdown'].forEach(evt=>{
+      noBtn.addEventListener(evt, (e)=>{
+        e.preventDefault();
+        moveNo();
+      }, {passive:false});
+    });
+
+    // Acepto
+    yesBtn.addEventListener('click', ()=>{
+      result.style.display = 'block';
+      popHearts(18);
+      const d = new Date();
+      timeEl.textContent = 'Aceptado el ' + d.toLocaleString('es-GT');
+      // Opcional: deshabilitar botones
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+      noBtn.style.opacity = .5;
+      yesBtn.style.opacity = .9;
+    });
+
+    window.addEventListener('load', ()=>{
+      placeNoInitial();
+      popHearts(8);
+    });
+    window.addEventListener('resize', placeNoInitial);
+  </script>
+</body>
+</html>
+
